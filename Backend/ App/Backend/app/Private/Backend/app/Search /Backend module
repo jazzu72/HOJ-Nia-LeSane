@@ -1,0 +1,11 @@
+backend/
+  app/
+    routes/
+      private/
+        bird_dog.py
+        nft_minting.py
+    services/
+      bird_dog/
+        search_grants.py
+      nft/
+        sovereignty_engine.js
