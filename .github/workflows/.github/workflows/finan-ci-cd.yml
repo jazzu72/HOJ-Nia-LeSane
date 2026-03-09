@@ -1,0 +1,98 @@
+name: finan Module CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'finan/**'
+      - 'requirements.txt'
+      - '.github/workflows/finan-ci-cd.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'finan/**'
+      - 'requirements.txt'
+      - '.github/workflows/finan-ci-cd.yml'
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 black pytest pytest-cov
+
+      - name: Lint with flake8 & black
+        run: |
+          flake8 finan/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          black --check finan/
+
+      - name: Run unit tests
+        run: |
+          pytest finan/tests/ --cov=finan --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov (optional)
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}  # optional – add if you use Codecov
+          file: coverage.xml
+          fail_ci_if_error: false
+
+  build-docker:  # Optional – only if you want Docker for finan module
+    runs-on: ubuntu-latest
+    needs: test-and-lint
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push finan Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: finan/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/jazzu72/nia-lesane-finan:latest
+            ghcr.io/jazzu72/nia-lesane-finan:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-vercel:  # Optional – only if finan has its own Vercel project or API proxy
+    runs-on: ubuntu-latest
+    needs: test-and-lint
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy finan API to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_FINAN_PROJECT_ID }}  # separate project ID if needed
+          working-directory: ./
+          vercel-args: '--prod'
+          scope: jazzu72s-projects
