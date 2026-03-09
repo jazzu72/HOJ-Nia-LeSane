@@ -1,0 +1,16 @@
+HOJ-Nia/
+│
+├── frontend/        ← SvelteKit web dashboard (Vercel builds this)
+│   ├── src/
+│   ├── package.json
+│   └── svelte.config.js
+│
+├── api/             ← Python serverless functions (Vercel runs these)
+│   ├── score.py
+│   ├── birddog.py
+│   └── taxliens.py
+│
+└── mobile/          ← Your React Native app (Expo builds this)
+    ├── App.js
+    ├── src/
+    └── package.json
