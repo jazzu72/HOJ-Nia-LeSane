@@ -1,0 +1,61 @@
+<script>
+  import { nia } from "$lib/api/client";
+  import LeadCard from "./components/LeadCard.svelte";
+
+  let address = "";
+  let arv = "";
+  let asking = "";
+  let repairs = "";
+  let result = null;
+
+  async function score() {
+    result = await nia.scoreDeal({
+      address,
+      arv: Number(arv),
+      asking: Number(asking),
+      repairs: Number(repairs)
+    });
+  }
+</script>
+
+<div class="dashboard">
+
+  {#if result}
+    <LeadCard {result} />
+  {/if}
+
+  <section class="deal-scoring">
+    <h2>Score a Deal</h2>
+
+    <input placeholder="Address" bind:value={address} />
+    <input placeholder="ARV" bind:value={arv} />
+    <input placeholder="Asking Price" bind:value={asking} />
+    <input placeholder="Repair Estimate" bind:value={repairs} />
+
+    <button on:click={score}>Score Deal</button>
+  </section>
+
+  <section class="notifications">
+    <h2>Notifications</h2>
+    <p>System initialized...</p>
+  </section>
+
+  <section class="engine-status">
+    <h2>Engine Status</h2>
+    <ul>
+      <li>Deal Scoring Engine: Online</li>
+      <li>BirdDog Engine: Standby</li>
+      <li>Tax Lien Engine: Standby</li>
+      <li>Mining Engine: Standby</li>
+      <li>Orchestrator: Online</li>
+    </ul>
+  </section>
+
+</div>
+
+<style>
+  .dashboard { padding: 2rem; font-family: system-ui; }
+  section { margin-top: 2rem; }
+  input { display: block; margin: 0.5rem 0; padding: 0.5rem; width: 300px; }
+  button { padding: 0.5rem 1rem; }
+</style>
