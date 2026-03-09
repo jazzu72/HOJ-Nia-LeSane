@@ -1,0 +1,183 @@
+{
+  "name": "Nia LeSane – Founder Pause + Slack Notifications + Council Approval",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nia/founder/pause",
+        "authentication": "basicAuth",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook – Founder Pause",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "your-basic-auth-id",
+          "name": "Nia Founder Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO founder_audit_log (event_type, actor, reason, scope, payload, timestamp) VALUES ('FOUNDER_PAUSE', :actor, :reason, :scope, :payload::jsonb, NOW());",
+        "additionalFields": {
+          "queryParams": "actor={{ $json.body.actor }}, reason={{ $json.body.reason }}, scope={{ $json.body.scope }}, payload={{ JSON.stringify($json.body) }}"
+        }
+      },
+      "id": "postgres-log",
+      "name": "Log to Postgres Audit",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [460, 300],
+      "credentials": {
+        "postgres": {
+          "id": "your-postgres-cred-id",
+          "name": "Nia Audit DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Davis-Tzu Strategic Filter\n\nconst task = $input.item.json;\nconst { task_complexity, resource_cost, win_probability } = task;\n\nlet strategic_verdict = \"\";\nlet tactical_instruction = \"\";\n\n// 1. THE DAVIS TEST: Is it aggressive? Does it push the ball downfield?\nconst is_aggressive = win_probability > 0.75 || task_complexity > 8;\n\n// 2. THE TZU TEST: Is the cost of the battle worth the reward?\nconst is_efficient = resource_cost < 50; \n\nif (is_aggressive && is_efficient) {\n    strategic_verdict = \"EXECUTE IMMEDIATELY\";\n    tactical_instruction = \"Attack the deep seam where the enemy is thin. Just win, baby.\";\n} else if (is_aggressive && !is_efficient) {\n    strategic_verdict = \"PROCEED WITH CAUTION\";\n    tactical_instruction = \"In the midst of chaos, there is opportunity, but do not bankrupt the House for a single yard.\";\n} else if (!is_aggressive && is_efficient) {\n    strategic_verdict = \"PUNT / REGROUP\";\n    tactical_instruction = \"The supreme art of war is to subdue the enemy without fighting. Wait for a better look.\";\n} else {\n    strategic_verdict = \"TERMINATE TASK\";\n    tactical_instruction = \"This is a losing play. We do not accept defeat. Throw it away.\";\n}\n\nreturn {\n    json: {\n        ...task,\n        governance: {\n            verdict: strategic_verdict,\n            counsel: tactical_instruction,\n            timestamp: new Date().toISOString(),\n            signatories: [\"Al Davis\", \"Sun Tzu\"]\n        }\n    }\n};"
+      },
+      "id": "davis-tzu-filter",
+      "name": "Davis-Tzu Strategic Filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "slackOAuth2Api",
+        "channelId": "C07A9FQ2M3L",
+        "text": "🚨 FOUNDER PAUSE INITIATED – Strategic Review Required",
+        "blocks": [
+          {
+            "type": "header",
+            "text": {"type": "plain_text", "text": "🚨 FOUNDER PAUSE INITIATED"}
+          },
+          {
+            "type": "section",
+            "fields": [
+              {"type": "mrkdwn", "text": "*Actor:* {{ $json.body.actor }}"},
+              {"type": "mrkdwn", "text": "*Reason:* {{ $json.body.reason }}"},
+              {"type": "mrkdwn", "text": "*Scope:* {{ $json.body.scope }}"},
+              {"type": "mrkdwn", "text": "*Strategic Verdict:* {{ $json.governance.verdict }}"},
+              {"type": "mrkdwn", "text": "*Counsel:* {{ $json.governance.counsel }}"}
+            ]
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Approve Resume"},
+                "style": "primary",
+                "action_id": "approve_pause",
+                "value": "{{ $json.request_id || 'unknown' }}"
+              },
+              {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Deny Resume"},
+                "style": "danger",
+                "action_id": "deny_pause",
+                "value": "{{ $json.request_id || 'unknown' }}"
+              }
+            ]
+          }
+        ]
+      },
+      "id": "notify-council",
+      "name": "Notify Council (Slack)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "your-slack-cred-id",
+          "name": "Nia Slack Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "slackOAuth2Api",
+        "channelId": "={{ $json.payload.channel.id }}",
+        "ts": "={{ $json.payload.message.ts }}",
+        "text": "=Decision: {{ $json.payload.actions[0].action_id === 'approve_pause' ? 'APPROVED' : 'DENIED' }}\nCouncil has spoken."
+      },
+      "id": "update-slack-message",
+      "name": "Update Slack Message",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "your-slack-cred-id",
+          "name": "Nia Slack Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://your-vercel-domain.vercel.app/api/governance/council-response",
+        "jsonBody": true,
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "{\n  \"request_id\": \"{{ $json.payload.actions[0].value || 'unknown' }}\",\n  \"approved\": {{ $json.payload.actions[0].action_id === 'approve_pause' }},\n  \"comment\": \"{{ $json.payload.actions[0].selected_options[0].value || '' }}\"\n}"
+      },
+      "id": "update-nia-api",
+      "name": "Update Nia API with Decision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "slackOAuth2Api",
+        "channelId": "YOUR_PERSONAL_SLACK_DM_CHANNEL_ID",
+        "text": "=Founder pause decision processed: {{ $json.payload.actions[0].action_id === 'approve_pause' ? 'APPROVED' : 'DENIED' }}\nRequest ID: {{ $json.payload.actions[0].value || 'unknown' }}"
+      },
+      "id": "dm-founder",
+      "name": "DM Founder (Slack)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1340, 500],
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "your-slack-cred-id",
+          "name": "Nia Slack Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook – Founder Pause": {
+      "main": [[{"node": "Log to Postgres Audit", "type": "main", "index": 0}]]
+    },
+    "Log to Postgres Audit": {
+      "main": [[{"node": "Davis-Tzu Strategic Filter", "type": "main", "index": 0}]]
+    },
+    "Davis-Tzu Strategic Filter": {
+      "main": [[{"node": "Notify Council (Slack)", "type": "main", "index": 0}]]
+    },
+    "Notify Council (Slack)": {
+      "main": [
+        [{"node": "Update Slack Message", "type": "main", "index": 0}],
+        [{"node": "DM Founder (Slack)", "type": "main", "index": 0}]
+      ]
+    },
+    "Update Slack Message": {
+      "main": [[{"node": "Update Nia API with Decision", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "timezone": "America/New_York",
+    "saveExecutionProgress": true
+  }
+}
