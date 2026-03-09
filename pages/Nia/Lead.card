@@ -1,0 +1,125 @@
+<script>
+  export let result;
+
+  function copyText() {
+    navigator.clipboard.writeText(result.textBlock);
+  }
+</script>
+
+<div class="lead-card">
+  <h2 class="address">{result.address}</h2>
+
+  <div class="score-section">
+    <div class="score">{result.score}</div>
+    <p class="label">Deal Score</p>
+  </div>
+
+  <div class="financials">
+    <p><span>ARV:</span> ${result.arv.toLocaleString()}</p>
+    <p><span>Asking:</span> ${result.asking.toLocaleString()}</p>
+    <p><span>Repairs:</span> ${result.repairs.toLocaleString()}</p>
+    <p><span>Net Spread:</span> ${result.spread.toLocaleString()}</p>
+  </div>
+
+  <div class="offer">
+    <p><span>Recommended Offer:</span> ${result.recommendedOffer.toLocaleString()}</p>
+  </div>
+
+  <div class="summary">
+    <p>{result.summary}</p>
+  </div>
+
+  <button class="copy-btn" on:click={copyText}>
+    Copy Lead Package
+  </button>
+
+  <button class="send-btn">
+    Send to Investor
+  </button>
+
+  <footer>
+    Prepared by Nia LeSane — Executive Intelligence Engine
+  </footer>
+</div>
+
+<style>
+  .lead-card {
+    background: #0d0d0f;
+    border: 1px solid #3a3a3d;
+    border-radius: 12px;
+    padding: 1.5rem;
+    color: #e6e6e6;
+    max-width: 420px;
+    margin-bottom: 2rem;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.08);
+  }
+
+  .address {
+    color: #f5d76e;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  .score-section {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .score {
+    font-size: 2.8rem;
+    font-weight: bold;
+    color: #f5d76e;
+  }
+
+  .label {
+    font-size: 0.9rem;
+    color: #b3b3b3;
+  }
+
+  .financials span,
+  .offer span {
+    color: #f5d76e;
+    font-weight: 600;
+  }
+
+  .financials p,
+  .offer p {
+    margin: 0.3rem 0;
+  }
+
+  .summary {
+    margin: 1rem 0;
+    color: #d1d1d1;
+    line-height: 1.4;
+  }
+
+  .copy-btn,
+  .send-btn {
+    width: 100%;
+    padding: 0.7rem;
+    margin-top: 0.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .copy-btn {
+    background: #1a1a1d;
+    color: #f5d76e;
+    border: 1px solid #f5d76e;
+  }
+
+  .send-btn {
+    background: #f5d76e;
+    color: #0d0d0f;
+  }
+
+  footer {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: #7a7a7a;
+    text-align: center;
+  }
+</style>
