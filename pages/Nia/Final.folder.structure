@@ -1,0 +1,56 @@
+HOJ-Nia/
+│
+├── frontend/                          # SvelteKit app (runs locally on Surface 2)
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── +layout.svelte
+│   │   │   ├── +layout.ts
+│   │   │   ├── +page.svelte
+│   │   │   └── nia/                   # Founder Dashboard
+│   │   │       ├── +page.svelte
+│   │   │       └── components/
+│   │   │           ├── LeadCard.svelte
+│   │   │           ├── ScoreForm.svelte
+│   │   │           └── Notifications.svelte
+│   │   ├── lib/
+│   │   │   ├── api/
+│   │   │   │   └── client.ts          # SvelteKit API client
+│   │   │   ├── styles/
+│   │   │   │   └── hoj-theme.css      # House of Jazzu theme
+│   │   │   └── utils/
+│   │   │       └── formatters.ts
+│   │   └── app.d.ts
+│   ├── static/
+│   │   └── hoj-logo.svg
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── backend/                           # Cloud backend (Vercel Python functions)
+│   ├── score.py                       # Deal scoring engine
+│   ├── birddog.py                     # BirdDog engine (future)
+│   ├── taxliens.py                    # Tax lien engine (future)
+│   ├── orchestrator.py                # Orchestrator (future)
+│   ├── shared/
+│   │   ├── models.py
+│   │   └── utils.py
+│   └── requirements.txt
+│
+├── supabase/                          # Database + auth + storage
+│   ├── migrations/
+│   ├── functions/
+│   └── config.toml
+│
+├── infra/                             # Deployment + automation
+│   ├── vercel.json                    # Vercel deployment config
+│   ├── github-actions/
+│   │   └── deploy.yml
+│   └── scripts/
+│       └── cleanup.ps1                # Surface 2 cleanup script
+│
+├── docs/                              # Documentation + business logic
+│   ├── architecture.md
+│   ├── hoj-branding.md
+│   ├── nia-engines.md
+│   └── revenue-model.md
+│
+└── README.md
