@@ -1,0 +1,24 @@
+<script>
+  import { nia } from "$lib/api/client";
+
+  let address = "";
+  let arv = "";
+  let asking = "";
+  let repairs = "";
+  let result = null;
+
+  async function score() {
+    result = await nia.scoreDeal({
+      address,
+      arv: Number(arv),
+      asking: Number(asking),
+      repairs: Number(repairs)
+    });
+  }
+</script>
+
+<button on:click={score}>Score Deal</button>
+
+{#if result}
+  <pre>{JSON.stringify(result, null, 2)}</pre>
+{/if}
