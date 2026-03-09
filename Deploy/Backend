@@ -1,0 +1,5 @@
+backend/
+  score.py
+  birddog.py
+  taxliens.py
+  requirements.txt
