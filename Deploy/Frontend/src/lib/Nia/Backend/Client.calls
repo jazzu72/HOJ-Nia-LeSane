@@ -1,0 +1,6 @@
+nia.scoreDeal({
+  address,
+  arv: Number(arv),
+  asking: Number(asking),
+  repairs: Number(repairs)
+});
