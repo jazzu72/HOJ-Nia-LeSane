@@ -1,0 +1,24 @@
+<script>
+  let recognition;
+  let transcript = '';
+
+  onMount(() => {
+    if ('webkitSpeechRecognition' in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = e => {
+        transcript = e.results[0][0].transcript;
+      };
+    }
+  });
+
+  function startVoice() {
+    recognition?.start();
+  }
+</script>
+
+<button on:click={startVoice} class="voice-btn">🎤 Speak to Nia</button>
+<textarea bind:value={transcript} placeholder="Or speak..."></textarea>
