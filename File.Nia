@@ -1,0 +1,6 @@
+HOJ-Nia/
+  frontend/        ← SvelteKit (Vite) web app
+  api/             ← Python serverless functions
+  mobile/          ← Expo mobile app
+  infra/           ← GitHub Actions, Terraform, Vercel config
+  docs/
